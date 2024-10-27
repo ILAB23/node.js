@@ -1,9 +1,10 @@
 {
-  "name": "my-new-project",
+  "name": "node.js1",
   "version": "1.0.0",
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "start": "node srct/index.js",
     "dev": "nodemon src/index.js"
   },
   "author": "",
