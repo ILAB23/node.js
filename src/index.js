@@ -1,79 +1,47 @@
-import http from "http";
-
-const hostname = "127.0.0.1";
+import express from 'express';
+import {getItemById, getItems, mediaItems, postItem} from './media.js';
+const hostname = '127.0.0.1';
 const port = 3000;
+const app = express();
 
-// Luodaan esimerkkidata
-const items = [
-  { id: 1, name: "Item1" },
-  { id: 2, name: "Item2" },
-];
+app.set('view engine', 'pug');
+app.set('views', 'src/views');
 
-const server = http.createServer((req, res) => {
-  const urlParts = req.url.split("/");
+app.use(express.json());
 
-  // GET /items - palauttaa luettelon kaikista kohteista
-  if (req.method === "GET" && req.url === "/items") {
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(items));
-  }
-  // POST /items - lisää uuden kohteen
-  else if (req.method === "POST" && req.url === "/items") {
-    let body = "";
-    req.on("data", (chunk) => {
-      body += chunk.toString();
-    });
-    req.on("end", () => {
-      const newItem = JSON.parse(body);
-      newItem.id = items.length + 1; // luo uusi id
-      items.push(newItem);
-      res.writeHead(201, { "Content-Type": "application/json" });
-      res.end(JSON.stringify(newItem));
-    });
-  }
-  // GET /items/:id - palauttaa tietyn kohteen
-  else if (
-    req.method === "GET" &&
-    urlParts[1] === "items" &&
-    urlParts.length === 3
-  ) {
-    const itemId = parseInt(urlParts[2]);
-    const item = items.find((i) => i.id === itemId);
+// Home page (client) as static html, css, js
+app.use(express.static('public'));
+// Uploaded media files
+app.use('/media', express.static('media'));
 
-    if (item) {
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify(item));
-    } else {
-      res.writeHead(404, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ message: "Item not found" }));
-    }
-  }
-  // DELETE /items/:id - poistaa tietyn kohteen
-  else if (
-    req.method === "DELETE" &&
-    urlParts[1] === "items" &&
-    urlParts.length === 3
-  ) {
-    const itemId = parseInt(urlParts[2]);
-    const itemIndex = items.findIndex((i) => i.id === itemId);
-
-    if (itemIndex !== -1) {
-      items.splice(itemIndex, 1); // Poistaa kohteen listalta
-      res.writeHead(204); // 204 No Content
-      res.end();
-    } else {
-      res.writeHead(404, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ message: "Item not found" }));
-    }
-  }
-  // Route not found
-  else {
-    res.writeHead(404, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ message: "Route not found" }));
-  }
+// Api documentation tms. with pug
+app.get('/api', (req, res) => {
+  res.render('index', {
+    title: 'API Documentation',
+    message: 'TODO: include docs here!',
+    exampleData: mediaItems,
+  });
 });
 
-// Palvelin kuuntelee
-server.listen(port, hostname, () => {
+// Media resource endpoints
+app.get('/api/media', (req, res) => {
+  getItems(res);
+});
+
+app.get('/api/media/:id', (req, res) => {
+  //console.log('req.params', req.params);
+  //console.log('query params', req.query);
+  getItemById(req, res);
+});
+
+app.post('/api/media', (req, res) => {
+  postItem(req, res);
+});
+app.put('/api/media/:id', (req, res) => {
+  // TODO: implement this endpoint
+  res.status(501).json({message: 'Under construction'});
+});
+
+app.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}/`);
 });

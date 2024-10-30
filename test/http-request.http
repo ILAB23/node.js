@@ -1,0 +1,14 @@
+### GET request example
+GET http://localhost:3000/api/media
+
+### POST request example
+POST http://localhost:3000/api/media
+Content-Type: application/json
+
+{
+    "filename": "new_image.jpg",
+    "title": "New Image",
+    "description": "Description of the new image",
+    "user_id": 1606,
+    "media_type": "image/jpeg"
+}
