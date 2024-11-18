@@ -1,45 +1,45 @@
 import http from 'http';
-import {getItems, postItem, getItemId, deleteItem, putItem} from './items.js';
-
+import {
+  getItems,
+  getItemsById,
+  postItem,
+  deleteItem,
+  putItem,
+} from './items.js';
 const hostname = '127.0.0.1';
 const port = 3000;
 
-// Luo palvelin ja määritä käsittelijät kaikille pyyntötyypeille
 const server = http.createServer((req, res) => {
+  console.log('request', req.method, req.url);
   const {method, url} = req;
-  const path = url.split('?')[0];
-  const id = parseInt(path.split('/')[2]);
-
-  console.log('method:', method, 'url:', url);
-
-  // Hakee kaikki kohteet
-  if (path === '/items' && method === 'GET') {
-    getItems(req, res);
-
-    // Lisää uuden kohteen
-  } else if (path === '/items' && method === 'POST') {
+  const reqParts = url.split('/');
+  // check method, url and generate response accordingly (=routing)
+  if (method === 'GET' && url === '/') {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    res.write('<h1>Welcome to my API</h1>');
+    res.write('<p>documentation comes here</p>');
+    res.end();
+  } else if (method === 'GET' && reqParts[1] === 'items' && reqParts[2]) {
+    console.log('GETting item with id', reqParts[2]);
+    getItemsById(res, reqParts[2]);
+  } else if (method === 'GET' && reqParts[1] === 'items') {
+    console.log('GETting all items');
+    getItems(res);
+  } else if (method === 'POST' && reqParts[1] === 'items') {
+    console.log('POSTing a new item');
     postItem(req, res);
-
-    // Hakee kohteen ID:n perusteella
-  } else if (path.startsWith('/items/') && method === 'GET') {
-    getItemId(id, res);
-
-    // Poistaa kohteen ID:n perusteella
-  } else if (path.startsWith('/items/') && method === 'DELETE') {
-    deleteItem(id, res);
-
-    // Päivittää kohteen ID:n perusteella
-  } else if (path.startsWith('/items/') && method === 'PUT') {
-    putItem(id, req, res);
-
-    // Reittiä ei löytynyt
+  } else if (method === 'DELETE' && reqParts[1] === 'items' && reqParts[2]) {
+    console.log('DELETing item with id', reqParts[2]);
+    deleteItem(res, reqParts[2]);
+  } else if (method === 'PUT' && reqParts[1] === 'items' && reqParts[2]) {
+    console.log('PUTting item with id', reqParts[2]);
+    putItem(res, reqParts[2], req);
   } else {
     res.writeHead(404, {'Content-Type': 'application/json'});
-    res.end(JSON.stringify({error: '404', message: 'not found'}));
+    res.end('{"message": "404 Resource not found!"}');
   }
 });
 
-// Käynnistä palvelin
 server.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}/`);
 });
